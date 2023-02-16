@@ -1,13 +1,48 @@
 import User from "../models/User.js";
 import { StatusCodes } from "http-status-codes";
+import { BadRequestError, UnauthenticatedError } from "../errors/index.js";
 
 const register = async (req, res, next) => {
-  const user = await User.create(req.body);
-  res.status(StatusCodes.CREATED).json(user);
+  const { name, email, password } = req.body;
+
+  if (!name || !email || !password) {
+    throw new BadRequestError("please provide all values");
+  }
+
+  const userAlreadyExists = await User.findOne({ email });
+  if (userAlreadyExists) {
+    throw new BadRequestError("Email already in use");
+  }
+  const user = await User.create({ name, email, password });
+  const token = user.createJWT();
+  res.status(StatusCodes.CREATED).json({
+    user: {
+      email: user.email,
+      lastName: user.lastName,
+      location: user.location,
+      name: user.name,
+    },
+    token,
+    location: user.location,
+  });
 };
 
 const login = async (req, res) => {
-  res.send("login user");
+  const { email, password } = req.body;
+  if (!email || !password) {
+    throw new BadRequestError("please provide all values");
+  }
+  const user = await (await User.findOne({ email })).isSelected("+password");
+  if (!user) {
+    throw new UnauthenticatedError("Invalid Credentials");
+  }
+  const isPasswordCorrect = await user.comparePassword(password);
+  if (!isPasswordCorrect) {
+    throw new UnauthenticatedError("Invalid Credentials");
+  }
+  const token = user.createJWT();
+  user.password = undefined;
+  res.status(StatusCodes.OK).json({ user, token, location: user.location });
 };
 
 const updateUser = async (req, res) => {
