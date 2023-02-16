@@ -32,7 +32,7 @@ const login = async (req, res) => {
   if (!email || !password) {
     throw new BadRequestError("please provide all values");
   }
-  const user = await (await User.findOne({ email })).isSelected("+password");
+  const user = await User.findOne({ email }).select("+password");
   if (!user) {
     throw new UnauthenticatedError("Invalid Credentials");
   }
