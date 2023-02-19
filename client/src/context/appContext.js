@@ -24,18 +24,23 @@ import {
   EDIT_JOB_BEGIN,
   EDIT_JOB_SUCCESS,
   EDIT_JOB_ERROR,
+  GET_CURRENT_USER_BEGIN,
+  GET_CURRENT_USER_SUCCESS,
 } from "./actions";
 
 const token = localStorage.getItem("token");
 const user = localStorage.getItem("user");
 const userLocation = localStorage.getItem("location");
 
+console.log("appContext", token);
+console.log("appContext", user);
+
 const initialState = {
   isLoading: false,
   showAlert: false,
   alertText: "",
   alertType: "",
-  user: null,
+  user: user ? JSON.parse(user) : null,
   token: token,
   userLocation: userLocation || "",
   showSidebar: false,
@@ -89,7 +94,7 @@ const AppProvider = ({ children }) => {
       console.log(error.response);
       if (error.response.status === 401) {
         console.log("AUTH ERROR");
-        //logoutUser();
+        logoutUser();
       }
       return Promise.reject(error);
     }
@@ -262,6 +267,25 @@ const AppProvider = ({ children }) => {
       logoutUser();
     }
   };
+
+  const getCurrentUser = async () => {
+    dispatch({ type: GET_CURRENT_USER_BEGIN });
+    try {
+      const { data } = await authFetch("/auth/getCurrentUser");
+      const { user, location } = data;
+
+      dispatch({
+        type: GET_CURRENT_USER_SUCCESS,
+        payload: { user, location },
+      });
+    } catch (error) {
+      if (error.response.status === 401) return;
+      logoutUser();
+    }
+  };
+  useEffect(() => {
+    //getCurrentUser();
+  }, []);
 
   return (
     <AppContext.Provider

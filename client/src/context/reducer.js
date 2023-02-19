@@ -21,6 +21,8 @@ import {
   EDIT_JOB_BEGIN,
   EDIT_JOB_SUCCESS,
   EDIT_JOB_ERROR,
+  GET_CURRENT_USER_BEGIN,
+  GET_CURRENT_USER_SUCCESS,
 } from "./actions";
 
 import { initialState } from "./appContext";
@@ -56,8 +58,8 @@ const reducer = (state, action) => {
       isLoading: false,
       token: action.payload.token,
       user: action.payload.user,
-      userLocation: action.payload.userLocation,
-      jobLocation: action.payload.jobLocation,
+      userLocation: action.payload.location,
+      jobLocation: action.payload.location,
       showAlert: true,
       alertType: "success",
       alertText: action.payload.alertText,
@@ -104,8 +106,8 @@ const reducer = (state, action) => {
       isLoading: false,
       token: action.payload.token,
       user: action.payload.user,
-      userLocation: action.payload.userLocation,
-      jobLocation: action.payload.jobLocation,
+      userLocation: action.payload.location,
+      jobLocation: action.payload.location,
       showAlert: true,
       alertType: "success",
       alertText: "User Profile Updated!",
@@ -226,6 +228,19 @@ const reducer = (state, action) => {
       showAlert: true,
       alertType: "danger",
       alertText: action.payload.msg,
+    };
+  }
+
+  if (action.type === GET_CURRENT_USER_BEGIN) {
+    return { ...state, userLoading: true, showAlert: false };
+  }
+  if (action.type === GET_CURRENT_USER_SUCCESS) {
+    return {
+      ...state,
+      userLoading: false,
+      user: action.payload.user,
+      userLocation: action.payload.location,
+      jobLocation: action.payload.location,
     };
   }
 
