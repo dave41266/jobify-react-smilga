@@ -6,6 +6,7 @@ import {
 } from "../errors/index.js";
 import Job from "../models/Job.js";
 import checkPermissions from "../utils/checkPermissions.js";
+import mongoose from "mongoose";
 
 const createJob = async (req, res) => {
   const { position, company } = req.body;
@@ -20,7 +21,9 @@ const createJob = async (req, res) => {
 
 const getAllJobs = async (req, res) => {
   const jobs = await Job.find({ createdBy: req.user.userId });
-  res.status(StatusCodes.OK).json({ jobs, totalJob: jobs.length, numPages: 1 });
+  res
+    .status(StatusCodes.OK)
+    .json({ jobs, totalJobs: jobs.length, numPages: 1 });
 };
 
 const updateJob = async (req, res) => {
@@ -67,7 +70,37 @@ const deleteJob = async (req, res) => {
 };
 
 const showStats = async (req, res) => {
-  res.send("show stats");
+  let stats = await Job.aggregate([
+    { $match: { createdBy: mongoose.Types.ObjectId(req.user.userId) } },
+    { $group: { _id: "$status", count: { $sum: 1 } } },
+  ]);
+
+  // we want an object instead of an array
+  stats = stats.reduce((acc, curr) => {
+    const { _id: title, count } = curr;
+    acc[title] = count;
+    return acc;
+  }, {});
+
+  const defaultStats = {
+    pending: stats.pending || 0,
+    interview: stats.interview || 0,
+    declined: stats.declined || 0,
+  };
+
+  let monthlyApplications = await Job.aggregate([
+    { $match: { createdBy: mongoose.Types.ObjectId(req.user.userId) } },
+    {
+      $group: {
+        _id: { year: { $year: "$createdAt" }, month: { $month: "$createdAt" } },
+        count: { $sum: 1 },
+      },
+    },
+    { $sort: { "_id.year": -1, "_id.month": -1 } },
+    { $limit: 6 },
+  ]);
+
+  res.status(StatusCodes.OK).json({ defaultStats, monthlyApplications });
 };
 
 export { createJob, deleteJob, getAllJobs, updateJob, showStats };
