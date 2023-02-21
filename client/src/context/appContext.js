@@ -146,10 +146,10 @@ const AppProvider = ({ children }) => {
       });
       addUserToLocalStorage({ user, token, location });
     } catch (error) {
-      //console.log(error.response);
+      console.log(error.response);
       dispatch({
         type: SETUP_USER_ERROR,
-        payload: { msg: error.response.data },
+        payload: { msg: error.response.data.msg },
       });
     }
     clearAlert();
