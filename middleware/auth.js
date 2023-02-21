@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { deleteJob } from "../controllers/jobsController.js";
 import { UnauthenticatedError } from "../errors/index.js";
 
 const auth = async (req, res, next) => {
@@ -16,6 +17,7 @@ const auth = async (req, res, next) => {
   //   //console.log(`a[0]: ${a[0]}`);
   //   //console.log(`a[1]: ${a[1]}`);
   // }
+
   console.log(token);
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
